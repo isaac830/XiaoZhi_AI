@@ -1,0 +1,7 @@
+coredump.bin
+__pycache__
+settings.json
+spiffs_image.bin
+build
+managed_components
+res

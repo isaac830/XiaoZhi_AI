@@ -1,0 +1,10 @@
+dependencies:
+  isaac830/cubicat_s3: "^1.0.5"
+  isaac830/cubicat_spine: "^1.0.4"
+  espressif/esp_websocket_client: "^1.4.0"
+  espressif/esp-sr: "2.0.2"
+  espressif/esp_new_jpeg: "^0.6.1"
+  78/esp-opus-encoder: "~2.1.0"
+  lvgl/lvgl: "8.4.0"
+  idf:
+    version: ">=4.1.0"
