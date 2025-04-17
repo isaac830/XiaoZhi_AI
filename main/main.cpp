@@ -6,7 +6,6 @@
 #include "esp_timer.h"
 #include "js_binding/js_binding.h"
 #include <vector>
-#include "tencent_asr.h"
 #include <mbedtls/base64.h>
 #include "xiaozhi_ai/xiaozhi_ai.h"
 #include "socket/websocket.h"

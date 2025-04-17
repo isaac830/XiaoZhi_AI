@@ -1,7 +1,6 @@
 #include "xiaozhi_ai.h"
 #include <utils/helper.h>
 #include "cubicat.h"
-#include "opus/opus.h"
 #include "system_info.h"
 #include <esp_random.h>
 #include "esp_chip_info.h"

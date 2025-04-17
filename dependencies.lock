@@ -79,7 +79,7 @@ dependencies:
       type: idf
     version: 5.3.1
   isaac830/cubicat_s3:
-    component_hash: 277898f681da835c81cc100d72cdf1c15eb98c5929cf3f1d71ca0e863e1a8f5e
+    component_hash: da9bd7d8ac8070637abfc1f401ec54bd7e505fc74d4c922f5844ba1c509f5ee8
     dependencies:
     - name: idf
       require: private
@@ -87,9 +87,9 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.0.5
+    version: 1.0.6
   isaac830/cubicat_spine:
-    component_hash: a6fa598a8e0e8c14bcd4316a6fe68a0af5fece1bc817ac2cdcdc09c52a122b51
+    component_hash: bcf8483dcb5a7fbe6a5538c13b7fe3f3433749aa3ecdf341c489cc1efc35c463
     dependencies:
     - name: idf
       require: private
@@ -101,7 +101,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.0.4
+    version: 1.0.5
   lvgl/lvgl:
     component_hash: d7c1ac037ae6e85d94897f807d6e7ba0946a83e720074fc95a4f6241da9f9f53
     dependencies: []
@@ -118,6 +118,6 @@ direct_dependencies:
 - isaac830/cubicat_s3
 - isaac830/cubicat_spine
 - lvgl/lvgl
-manifest_hash: 108684ab8f43316a816cce9a0b8ce022b06014b3cec84e7c3446ba9a37ddc639
+manifest_hash: 4b7e96adc3a0436c12d0802ea6f8ba0adca0534ee803cd2b666b0f26928899bb
 target: esp32s3
 version: 2.0.0
