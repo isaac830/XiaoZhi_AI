@@ -88,7 +88,7 @@ WebSocket::~WebSocket() {
     disconnect();
 }
 
-void WebSocket::connect(const char* uri, int port, CustomHeaders headers) {
+void WebSocket::connect(const char* uri, int port, void* arg) {
     if (m_eConnectState == CONNECTING) {
         return;
     }
@@ -117,10 +117,10 @@ void WebSocket::connect(const char* uri, int port, CustomHeaders headers) {
     websocket_cfg.buffer_size = 1024 * 4;
     websocket_cfg.reconnect_timeout_ms = RECONNECT_INTERVAL_MS;
 
-    m_userHeaders = headers;
+    m_userHeaders = *static_cast<CustomHeaders*>(arg);
     m_client = esp_websocket_client_init(&websocket_cfg);
     esp_websocket_register_events(m_client, WEBSOCKET_EVENT_ANY, websocket_event_handler, (void *)this);
-    for (auto& header : headers) {
+    for (const auto& header : m_userHeaders) {
         esp_websocket_client_append_header(m_client, header.first.c_str(), header.second.c_str());
     }
     if (m_pListener) {
@@ -133,7 +133,7 @@ void WebSocket::connect(const char* uri, int port, CustomHeaders headers) {
 }
 
 void WebSocket::reconnect() {
-    connect(m_sUri.c_str(), m_nPort, m_userHeaders);
+    connect(m_sUri.c_str(), m_nPort, &m_userHeaders);
 }
 
 void WebSocket::onConnected() {
@@ -170,17 +170,19 @@ void WebSocket::onDataReceived(const char* data, size_t len, uint8_t opCode) {
     }
 }
 
-void WebSocket::send(const char* data, size_t len, bool binary) {
+int WebSocket::send(const char* data, size_t len, uint8_t type) {
     if (!isConnected()) {
-        return;
+        return 0;
     }
+    int sizeSend;
     xSemaphoreTake(ws_mutex, portMAX_DELAY);
-    if (binary) {
-        esp_websocket_client_send_bin(m_client, data, len, portMAX_DELAY);
+    if (type == BINARY_PROTOCOL) {
+        sizeSend = esp_websocket_client_send_bin(m_client, data, len, portMAX_DELAY);
     } else {
-        esp_websocket_client_send_text(m_client, data, len, portMAX_DELAY);
+        sizeSend = esp_websocket_client_send_text(m_client, data, len, portMAX_DELAY);
     }
     xSemaphoreGive(ws_mutex);
+    return sizeSend;
 }
 void WebSocket::disconnect() {
     onDisconnected();

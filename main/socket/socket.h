@@ -5,15 +5,23 @@
 #include <map>
 #include <string>
 
-using CustomHeaders = std::map<std::string, std::string>;
+#define TEXT_PROTOC0L   0
+#define BINARY_PROTOCOL 1
+#define AUDIO_PROTOCOL  2
 
 class Socket {
 public:
-    virtual void connect(const char* uri, int port, CustomHeaders customHeaders) = 0;
+    virtual void connect(const char* host, int port, void* arg) = 0;
     virtual void reconnect() = 0;
-    virtual void send(const char* data, unsigned int len, bool binary) = 0;
+    virtual int send(const char* data, unsigned int len, uint8_t type) = 0;
     virtual void disconnect() = 0;
     virtual bool isConnected() = 0;
+protected:
+    enum ConnectState {
+        CONNECTING,
+        CONNECTED,
+        DISCONNECTED
+    };
 };
 
 class SocketListener {

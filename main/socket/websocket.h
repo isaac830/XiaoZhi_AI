@@ -7,22 +7,19 @@
 #include <functional>
 #include <string>
 
-typedef std::function<void (const char* data, size_t len)> IncomingAudioCallback;
-typedef std::function<void (cJSON* json)> IncomingJsonCallback;
+using IncomingAudioCallback = std::function<void (const char* data, size_t len)> ;
+using IncomingJsonCallback = std::function<void (cJSON* json)> ;
+using CustomHeaders = std::map<std::string, std::string>;
 
 class WebSocket : public Socket {
-    enum ConnectState {
-        CONNECTING,
-        CONNECTED,
-        DISCONNECTED
-    };
+
 public:
     WebSocket();
     ~WebSocket();
 
-    void connect(const char* uri, int port, CustomHeaders customHeaders) override;
+    void connect(const char* uri, int port, void* customHeaders) override;
     void reconnect() override;
-    void send(const char* data, size_t len, bool binary) override;
+    int send(const char* data, size_t len, uint8_t type) override;
     void disconnect() override;
     bool isConnected() override;
 

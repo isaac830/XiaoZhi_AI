@@ -15,7 +15,6 @@
 
 using namespace cubicat;
 
-#define ENABLE_JS 1
 
 #define LVGL_TICK_PERIOD_MS    5
 static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
@@ -77,8 +76,6 @@ lv_obj_t* createBackBufferObj() {
     // 创建 LVGL 图像对象
     lv_obj_t * imgObj = lv_img_create(lv_scr_act());
     // 使用自定义缓冲区创建图像
-    buffer_desc.header.always_zero = 0;
-    buffer_desc.header.reserved = 0;
     buffer_desc.header.w = CUBICAT.lcd.width();
     buffer_desc.header.h = CUBICAT.lcd.height();
     buffer_desc.header.cf = LV_IMG_CF_TRUE_COLOR;
@@ -134,7 +131,7 @@ void lvObjAnimMove(lv_obj_t *obj, int16_t x, int16_t y, int timeMS) {
     lv_anim_start(&anim_y);
 }
 
-void connectToXiaoZhi(WebSocket* socket, XiaoZhiAI* xiaozhi) {
+void connectToXiaoZhi(Socket* socket, XiaoZhiAI* xiaozhi) {
     const char* uri = "wss://api.tenclass.net/xiaozhi/v1/"; int port = 443;
     // const char* uri = "ws://192.168.0.12:8000/xiaozhi/v1/"; int port = 8000;
     CustomHeaders headers;
@@ -142,7 +139,12 @@ void connectToXiaoZhi(WebSocket* socket, XiaoZhiAI* xiaozhi) {
     headers["Protocol-Version"] = "1";
     headers["Device-Id"] = GetMacAddress();
     headers["Client-Id"] = xiaozhi->getUUID();
-    socket->connect(uri, port, headers);
+    socket->connect(uri, port, &headers);
+}
+
+void connectToMyServer(Socket* socket) {
+    const char* uri = "192.168.0.12"; int port = 8201;
+    socket->connect(uri, port, nullptr);
 }
 
 #define CHAT_BG_UP lvObjAnimMove(textBG, 0, CUBICAT.lcd.height() - textBGHeight, 200);
@@ -202,7 +204,7 @@ extern "C" void app_main(void)
     CUBICAT.lcd.fillScreen(GRAY);
     CubicatSpineExtension::init();
     CubicatTextureLoader::init(SPIFFS);   
-#if ENABLE_JS
+#if CONFIG_JAVASCRIPT_ENABLE
     JSBindingInit("/spiffs", [](){
         Register_SPINE_API();
     });
@@ -255,7 +257,7 @@ extern "C" void app_main(void)
         lv_label_set_text(chat_text, text.c_str());
         CHAT_BG_UP
     });
-#if ENABLE_JS
+#if CONFIG_JAVASCRIPT_ENABLE
     xiaozhi->setLLMCallback([](Emotion emo){
         MJS_CALL("onXiaoZhiEmotion", 1, (double)emo);
 #else
@@ -273,7 +275,7 @@ extern "C" void app_main(void)
 #endif
     });
 
-#if ENABLE_JS
+#if CONFIG_JAVASCRIPT_ENABLE
     xiaozhi->setStateCallback([textBG, chat_text](DeviceState state){
         MJS_CALL("onXiaoZhiState", 1, (double)state);
 #else
@@ -291,7 +293,7 @@ extern "C" void app_main(void)
             CHAT_BG_DOWN
         }
     });
-#if ENABLE_JS
+#if CONFIG_JAVASCRIPT_ENABLE
     xiaozhi->setConnectionCallback([chat_text, textBG](bool connected){
         MJS_CALL("onXiaoZhiConnected", 1, connected);
 #else
@@ -308,7 +310,7 @@ extern "C" void app_main(void)
     {
         xiaozhi->loop();
         CUBICAT.loop(false);
-#if !ENABLE_JS
+#if !CONFIG_JAVASCRIPT_ENABLE
         auto now = timeNow(8);
         int min = (now % 3600) / 60.0;
         int hour = (now % 86400) / 3600.0;
