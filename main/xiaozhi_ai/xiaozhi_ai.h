@@ -11,7 +11,6 @@
 #include "opus_decoder.h"
 #include "opus_encoder.h"
 #include "opus_resampler.h"
-#include "ota.h"
 #include "devices/audio_buffer.h"
 #include <functional>
 #include "audio_processing/audio_processor.h"
@@ -83,7 +82,7 @@ private:
     // Protocal end
     void foregroundTask(std::function<void()> callback);
     void audioTask(std::function<void()> callback);
-    void checkNewVersion();
+    void sendBoardInfo(std::map<std::string, std::string> headers);
     void reboot();
 
     std::string getCurrentStateName();
@@ -110,7 +109,6 @@ private:
     std::unique_ptr<OpusEncoderWrapper> m_pOpusEncoder;
     uint16_t                            m_opusFrameSize = 960;
     AudioBuffer                         m_opusFrameBuffer;
-    Ota                                 m_ota;
     bool                                m_bAutoWakeOnReconnect = false;
     std::string                         m_sLastWakeWord;
     TTSCallback                         m_ttsCallback = nullptr;

@@ -7,6 +7,7 @@
 #include <esp_ota_ops.h>
 #include "esp_app_desc.h"
 #include <mbedtls/base64.h>
+#include "http_client/http_client.h"
 
 #define FG_TASK_EVENT (1 << 0)
 #define AUDIO_TASK_EVENT (1 << 1)
@@ -44,20 +45,13 @@ void AudioTask(void* param) {
     }
 }
 void XiaoZhiAI::onBeginConnect() {
-    // Check for new firmware version or get the MQTT broker address
-
-    // m_ota.SetCheckVersionUrl(OTA_VERSION_URL);
-    // m_ota.SetHeader("Device-Id", SystemInfo::GetMacAddress().c_str());
-    // m_ota.SetHeader("Client-Id", getUUID());
-    // m_ota.SetHeader("Accept-Language", LANG_CN);
-    // auto app_desc = esp_app_get_description();
-    // m_ota.SetHeader("User-Agent", std::string(BOARD_NAME "/") + app_desc->version);
-
-    // xTaskCreate([](void* arg) {
-    //     XiaoZhiAI* app = (XiaoZhiAI*)arg;
-    //     app->checkNewVersion();
-    //     vTaskDelete(NULL);
-    // }, "check_new_version", 4096, this, 2, nullptr);
+    std::map<std::string, std::string> headers;
+    headers["Device-Id"] = SystemInfo::GetMacAddress();
+    headers["Client-Id"] = getUUID();
+    headers["Accept-Language"] = LANG_CN;
+    auto app_desc = esp_app_get_description();
+    headers["User-Agent"] = std::string(BOARD_NAME "/") + app_desc->version;
+    sendBoardInfo(headers);
 }
 
 void XiaoZhiAI::onConnected(Socket* socket) {
@@ -505,87 +499,27 @@ std::string XiaoZhiAI::getBoardJson() {
     board_json += "\"mac\":\"" + SystemInfo::GetMacAddress() + "\"}";
     return board_json;
 }
-void XiaoZhiAI::checkNewVersion() {
-    // Check if there is a new firmware version available
-    m_ota.SetPostData(getJson());
-    auto display = &CUBICAT.lcd;
-    auto spker = &CUBICAT.speaker;
-    const int MAX_RETRY = 10;
-    int retry_count = 0;
-    const int retryInterval = 10;
-    while (true) {
-        if (!m_ota.CheckVersion()) {
-            retry_count++;
-            if (retry_count >= MAX_RETRY) {
-                LOGE("Too many retries, exit version check");
-                return;
-            }
-            LOGW("Check new version failed, retry in %d seconds (%d/%d)", retryInterval, retry_count, MAX_RETRY);
-            vTaskDelay(pdMS_TO_TICKS(retryInterval * 1000));
-            continue;
-        }
-        retry_count = 0;
-
-        if (m_ota.HasNewVersion()) {
-            // Alert(Lang::Strings::OTA_UPGRADE, Lang::Strings::UPGRADING, "happy", Lang::Sounds::P3_UPGRADE);
-            // Wait for the chat state to be idle
-            do {
-                vTaskDelay(pdMS_TO_TICKS(3000));
-            } while (getState() != Idle);
-
-            // Use main task to do the upgrade, not cancelable
-            foregroundTask([this, display, spker]() {
-                setState(Upgrading);
-                
-                // display->SetIcon(FONT_AWESOME_DOWNLOAD);
-                std::string message = std::string("新版本 ") + m_ota.GetFirmwareVersion();
-                // display->drawText(0,0, message.c_str(), BLACK, CUBICAT.lcd.width(), 2);
-
-                m_wakeWordDetect.StopDetection();
-                spker->setEnable(false);
-                {
-                    LOCK_OPUS_BUFFER
-                    m_opusBufferQueue.clear();
-                }
-                vTaskDelay(pdMS_TO_TICKS(1000));
-                m_ota.StartUpgrade([display](int progress, size_t speed) {
-                    char buffer[64];
-                    snprintf(buffer, sizeof(buffer), "%d%% %zuKB/s", progress, speed / 1024);
-                    display->drawText(0,0, buffer, BLACK, CUBICAT.lcd.width(), 2);
-                });
-                // LOGI("Firmware upgrade failed...");
-                vTaskDelay(pdMS_TO_TICKS(3000));
-                reboot();
-            });
-
-            return;
-        }
-
-        // No new version, mark the current version as valid
-        m_ota.MarkCurrentVersionValid();
-        // std::string message = std::string("版本: ") + m_ota.GetCurrentVersion();
-        // display->ShowNotification(message.c_str());
-    
-        if (m_ota.HasActivationCode()) {
-            // Activation code is valid
-            setState(Idle);
-            // ShowActivationCode();
-
-            // Check again in 60 seconds or until the device is idle
-            for (int i = 0; i < 60; ++i) {
-                if (getState() == Idle) {
-                    break;
-                }
-                vTaskDelay(pdMS_TO_TICKS(1000));
-            }
-            continue;
-        }
-
-        setState(Idle);
-        // display->fillScreen(GRAY);
-        // Exit the loop if upgrade or idle
-        break;
+void XiaoZhiAI::sendBoardInfo(std::map<std::string, std::string> headers) {
+    auto mark = CUBICAT.storage.getString("board_info_send");
+    if (mark == "true")
+        return;
+    auto http = new HttpClient();
+    auto req = HttpRequest();
+    for (const auto& header : headers) {
+        req.headers.insert({header.first, header.second});
     }
+    req.headers.insert({"Content-Type", "application/json"});
+    req.method = HttpMethod::POST;
+    req.url = OTA_VERSION_URL;
+    req.body = getJson();
+    auto response = http->sendRequest(req);
+    if (response.error.length() > 0) {
+        LOGE("Failed to open HTTP connection: %s", response.error.c_str());
+        delete http;
+        return;
+    }
+    CUBICAT.storage.setString("board_info_send", "true");
+    delete http;
 }
 
 std::string GenerateUuid() {
