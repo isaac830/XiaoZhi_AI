@@ -500,9 +500,6 @@ std::string XiaoZhiAI::getBoardJson() {
     return board_json;
 }
 void XiaoZhiAI::sendBoardInfo(std::map<std::string, std::string> headers) {
-    auto mark = CUBICAT.storage.getString("board_info_send");
-    if (mark == "true")
-        return;
     auto http = new HttpClient();
     auto req = HttpRequest();
     for (const auto& header : headers) {
@@ -518,7 +515,6 @@ void XiaoZhiAI::sendBoardInfo(std::map<std::string, std::string> headers) {
         delete http;
         return;
     }
-    CUBICAT.storage.setString("board_info_send", "true");
     delete http;
 }
 
