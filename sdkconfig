@@ -586,12 +586,20 @@ CONFIG_SR_MN_EN_NONE=y
 # end of ESP Speech Recognition
 
 #
+# Cubicat BLE Configuration
+#
+# CONFIG_BLE_DEBUG is not set
+# end of Cubicat BLE Configuration
+
+#
 # Cubicat Configuration
 #
 CONFIG_DOUBLE_BUFFERING=y
 # CONFIG_REMOVE_GRAPHIC_ENGINE is not set
 CONFIG_ENABLE_BILINEAR_FILTER=y
 CONFIG_JAVASCRIPT_ENABLE=y
+CONFIG_CUBICAT_S3=y
+# CONFIG_BREAD_BOARD is not set
 # end of Cubicat Configuration
 
 #

@@ -108,7 +108,7 @@ private:
     std::unique_ptr<OpusDecoderWrapper> m_pOpusDecoder;
     std::unique_ptr<OpusEncoderWrapper> m_pOpusEncoder;
     uint16_t                            m_opusFrameSize = 960;
-    AudioBuffer                         m_opusFrameBuffer;
+    AudioBuffer8                        m_opusFrameBuffer;
     bool                                m_bAutoWakeOnReconnect = false;
     std::string                         m_sLastWakeWord;
     TTSCallback                         m_ttsCallback = nullptr;
