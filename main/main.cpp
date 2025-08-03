@@ -32,8 +32,8 @@ static void tick_task(void *arg) {
 
 void initLvglEnv() {
     lv_init();
-    uint32_t bufPixels = CUBICAT.lcd.width() * CUBICAT.lcd.height() / 8;
-    void* buf = heap_caps_malloc(bufPixels * sizeof(lv_color_t), MALLOC_CAP_DMA);
+    uint32_t bufPixels = CUBICAT.lcd.width() * CUBICAT.lcd.height();
+    void* buf = heap_caps_malloc(bufPixels * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
     assert(buf);
     // initialize LVGL draw buffers
     lv_disp_draw_buf_init(&disp_buf, buf, nullptr, bufPixels);
